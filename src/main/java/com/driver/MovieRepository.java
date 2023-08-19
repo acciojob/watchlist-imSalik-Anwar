@@ -10,7 +10,7 @@ import java.util.HashMap;
 public class MovieRepository {
     HashMap<String, Movie> movieDB = new HashMap<>();
     HashMap<String, Director> dirDB = new HashMap<>();
-    HashMap<String, List<String>> movieDirPair = new HashMap<>();
+    HashMap<String, List<String>> movieDirPairDB = new HashMap<>();
     public String addMovie(Movie m) {
         movieDB.put(m.getName(), m);
         return "Movie added successfully!";
@@ -21,13 +21,13 @@ public class MovieRepository {
         return "Director added successfully!";
     }
     public String addMovieDirectorPair(String movieName, String dirName) {
-        if(movieDirPair.containsKey(dirName)){
-            List<String> oldList = movieDirPair.get(dirName);
+        if(movieDirPairDB.containsKey(dirName)){
+            List<String> oldList = movieDirPairDB.get(dirName);
             oldList.add(movieName);
         } else{
             List<String> newList = new ArrayList<>();
             newList.add(movieName);
-            movieDirPair.put(dirName, newList);
+            movieDirPairDB.put(dirName, newList);
         }
         return "Movie-director pair added successfully!";
     }
@@ -41,7 +41,7 @@ public class MovieRepository {
 
 
     public List<String> getMoviesByDirectorName(String dirName) {
-        return movieDirPair.get(dirName);
+        return movieDirPairDB.get(dirName);
     }
 
     public List<String> findAllMovies() {
@@ -54,6 +54,13 @@ public class MovieRepository {
 
     public String deleteDirectorByName(String dirName) {
         if(dirDB.containsKey(dirName)){
+            if(movieDirPairDB.containsKey(dirName)) {
+                List<String> directorsMovies = movieDirPairDB.get(dirName);
+                for (String m : directorsMovies) {
+                    movieDB.remove(m);
+                }
+                movieDirPairDB.remove(dirName);
+            }
             dirDB.remove(dirName);
             return "Director deleted successfully!";
         }
@@ -61,7 +68,22 @@ public class MovieRepository {
     }
 
     public String deleteAllDirectors() {
-        movieDirPair.clear();
-        return "All directors deleted successfully!";
+        List<String> allDirectors = new ArrayList<>();
+        for(String d : dirDB.keySet()){
+            allDirectors.add(d);
+        }
+        dirDB.clear();
+        for(String d : allDirectors){
+            if(movieDirPairDB.containsKey(d)){
+                List<String> movies = movieDirPairDB.get(d);
+                for(String m : movies){
+                    if(movieDB.containsKey(m)){
+                        movieDB.remove(m);
+                    }
+                }
+                movieDirPairDB.remove(d);
+            }
+        }
+        return "All directors and their movies deleted successfully!";
     }
 }
